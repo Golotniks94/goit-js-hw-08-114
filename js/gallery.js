@@ -84,3 +84,37 @@ const galleryMarkup = images
   .join('');
 
 gallery.insertAdjacentHTML('beforeend', galleryMarkup);
+
+let latestRequest = 0;
+
+gallery.addEventListener('click', async event => {
+  const link = event.target.closest('.gallery-link');
+
+  if (!link) return;
+
+  event.preventDefault();
+
+  const request = ++latestRequest;
+  const image = link.querySelector('.gallery-image');
+  const instance = basicLightbox.create(
+    `<img src="${image.dataset.source}" alt="${image.alt}" />`,
+    {
+      onShow: () => document.addEventListener('keydown', onEscape),
+      onClose: () => document.removeEventListener('keydown', onEscape),
+    }
+  );
+
+  function onEscape(event) {
+    if (event.key === 'Escape') instance.close();
+  }
+
+  try {
+    await instance.element().querySelector('img').decode();
+  } catch {
+    return;
+  }
+
+  if (request !== latestRequest) return;
+
+  instance.show();
+});
